@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from models import db, ClientRequest, Module
 import os
 import uuid
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///filemaster.db'
@@ -16,8 +17,10 @@ with app.app_context():
 @app.route('/create_dummy')
 def create_dummy():
     """Create a dummy request with a couple modules and return the token."""
+    days = request.args.get('days', type=int)
+    expires_at = datetime.utcnow() + timedelta(days=days) if days else None
     token = uuid.uuid4().hex
-    req = ClientRequest(token=token)
+    req = ClientRequest(token=token, expires_at=expires_at)
     mod1 = Module(request=req, kind='file', description='Upload proof of income')
     mod2 = Module(request=req, kind='form', description='Provide credit score')
     db.session.add_all([req, mod1, mod2])
@@ -27,6 +30,8 @@ def create_dummy():
 @app.route('/request/<token>')
 def view_request(token):
     req = ClientRequest.query.filter_by(token=token).first_or_404()
+    if req.expires_at and datetime.utcnow() > req.expires_at:
+        return "This request has expired", 404
     selected_id = request.args.get('module')
     selected = Module.query.get(selected_id) if selected_id else None
     if not selected:
