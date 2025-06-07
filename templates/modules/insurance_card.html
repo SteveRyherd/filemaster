@@ -1,0 +1,19 @@
+<form action="{{ url_for('handle_module', module_id=module.id) }}" method="post" enctype="multipart/form-data">
+    <p>{{ module.description }}</p>
+    <p class="blurb">Agent name, Agent Phone Number, Policy Number, Expiration Date are all expected.</p>
+    {% if module.front_path or module.back_path %}
+        <div>
+            {% if module.front_path %}
+                <p>Front of card uploaded:</p>
+                <img src="{{ url_for('uploaded_file', filename=module.front_path) }}" class="thumb">
+            {% endif %}
+            {% if module.back_path %}
+                <p>Back of card uploaded:</p>
+                <img src="{{ url_for('uploaded_file', filename=module.back_path) }}" class="thumb">
+            {% endif %}
+        </div>
+    {% endif %}
+    <label>Front of Card: <input type="file" name="front" required></label><br>
+    <label>Back of Card: <input type="file" name="back" required></label>
+    <button type="submit">Upload</button>
+</form>

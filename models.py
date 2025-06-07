@@ -21,6 +21,8 @@ class Module(db.Model):
     description = db.Column(db.String(255))
     completed = db.Column(db.Boolean, default=False)
     file_path = db.Column(db.String(255))
+    front_path = db.Column(db.String(255))
+    back_path = db.Column(db.String(255))
     answer = db.Column(db.Text)
     
     
