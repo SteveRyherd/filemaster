@@ -21,6 +21,13 @@ def allowed_file(filename, mimetype):
         and mimetype in ALLOWED_MIMETYPES
     )
 
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic'}
+
+
+def allowed_file(filename: str) -> bool:
+    """Check if the file has an allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 db.init_app(app)
 
 with app.app_context():
