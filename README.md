@@ -21,3 +21,4 @@ This is a minimal prototype for a web application that allows a sales agent to r
 3. Navigate to `http://localhost:7777/create_dummy` to create a sample request. The page will output a tokenized link to access the request page.
 
 This prototype uses SQLite for storage and saves uploaded files to the `uploads/` directory.
+Uploads are limited to 10MB and the server only accepts PDF or common image files.
