@@ -1,0 +1,5 @@
+<form action="{{ url_for('handle_module', module_id=module.id) }}" method="post">
+    <p>{{ module.description }}</p>
+    <textarea name="answer" required></textarea>
+    <button type="submit">Submit</button>
+</form>
