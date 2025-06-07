@@ -66,6 +66,12 @@ MODULE_HANDLERS = {
     'form': FormModuleHandler(),
 }
 
+
+@app.route('/')
+def index():
+    """Landing page with links to common actions."""
+    return render_template('index.html')
+
 @app.route('/create_dummy')
 def create_dummy():
     """Create a dummy request with a couple modules and return the token."""
