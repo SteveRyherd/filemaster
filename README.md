@@ -41,3 +41,11 @@ create a new migration and upgrade the database:
 flask db migrate -m "describe change"
 flask db upgrade
 ```
+
+For example, to add the optional `AccessLog` table used to track page views you
+would run:
+
+```bash
+flask db migrate -m "add access log"
+flask db upgrade
+```

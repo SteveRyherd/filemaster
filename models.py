@@ -20,3 +20,14 @@ class Module(db.Model):
     kind = db.Column(db.String(10))  # 'file' or 'form'
     description = db.Column(db.String(255))
     completed = db.Column(db.Boolean, default=False)
+
+
+class AccessLog(db.Model):
+    """Record IP based activity on a request or individual module."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('client_request.id'), nullable=False)
+    module_id = db.Column(db.Integer, db.ForeignKey('module.id'), nullable=True)
+    ip_address = db.Column(db.String(64))
+    action = db.Column(db.String(50))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

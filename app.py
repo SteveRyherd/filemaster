@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, abort
-from models import db, ClientRequest, Module
+from models import db, ClientRequest, Module, AccessLog
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 import os
@@ -90,6 +90,17 @@ def list_requests():
         reqs.append({'token': r.token, 'completed': completed, 'total': total})
     return render_template('admin_requests.html', requests=reqs)
 
+
+@app.route('/admin/logs')
+def view_logs():
+    """Display recent access logs."""
+    logs = (
+        AccessLog.query.order_by(AccessLog.timestamp.desc())
+        .limit(100)
+        .all()
+    )
+    return render_template('admin_logs.html', logs=logs)
+
 @app.route('/request/<token>')
 def view_request(token):
     req = ClientRequest.query.filter_by(token=token).first_or_404()
@@ -105,6 +116,17 @@ def view_request(token):
         if not handler:
             abort(400, "Unknown module type")
         module_html = handler.render(selected)
+
+    db.session.add(
+        AccessLog(
+            request_id=req.id,
+            module_id=selected.id if selected else None,
+            ip_address=request.remote_addr,
+            action="view_request",
+        )
+    )
+    db.session.commit()
+
     return render_template('request.html', req=req, selected=selected, module_html=module_html)
 
 @app.route('/module/<int:module_id>', methods=['POST'])
@@ -114,6 +136,14 @@ def handle_module(module_id):
     if not handler:
         abort(400, "Unknown module type")
     handler.process(module)
+    db.session.add(
+        AccessLog(
+            request_id=module.request_id,
+            module_id=module.id,
+            ip_address=request.remote_addr,
+            action="module_completed",
+        )
+    )
     db.session.commit()
     return redirect(url_for('view_request', token=module.request.token))
 
