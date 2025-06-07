@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Client Requests</h2>
+<table>
+    <tr><th>Token</th><th>Status</th></tr>
+    {% for r in requests %}
+    <tr>
+        <td>{{ r.token }}</td>
+        <td>{{ r.completed }}/{{ r.total }} complete</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

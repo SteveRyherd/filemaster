@@ -44,6 +44,17 @@ def create_dummy():
     db.session.commit()
     return f"Created request with token: {token}\nVisit /request/{token} to view it."
 
+
+@app.route('/admin/requests')
+def list_requests():
+    """List all client requests with completion status."""
+    reqs = []
+    for r in ClientRequest.query.all():
+        total = len(r.modules)
+        completed = sum(1 for m in r.modules if m.completed)
+        reqs.append({'token': r.token, 'completed': completed, 'total': total})
+    return render_template('admin_requests.html', requests=reqs)
+
 @app.route('/request/<token>')
 def view_request(token):
     req = ClientRequest.query.filter_by(token=token).first_or_404()

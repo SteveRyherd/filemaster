@@ -7,6 +7,7 @@ This is a minimal prototype for a web application that allows a sales agent to r
 - List of requested items with completion status
 - Upload files or answer simple forms
 - Example route `/create_dummy` to generate a sample request
+- Staff route `/admin/requests` to view request tokens and completion status
 
 ## Running
 
