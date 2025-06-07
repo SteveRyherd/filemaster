@@ -1,0 +1,23 @@
+<form action="{{ url_for('handle_module', module_id=module.id) }}" method="post" enctype="multipart/form-data">
+    <h3>{{ module.description }}</h3>
+    <p>Please upload clear photos of both sides of your driver's license.</p>
+    
+    <div class="file-upload-group">
+        <label for="front_file">Front of Driver's License:</label>
+        <input type="file" name="front_file" id="front_file" accept="image/*,.pdf" required>
+        <small>Make sure your photo and personal information are clearly visible</small>
+    </div>
+    
+    <div class="file-upload-group">
+        <label for="back_file">Back of Driver's License:</label>
+        <input type="file" name="back_file" id="back_file" accept="image/*,.pdf" required>
+        <small>Ensure any endorsements or restrictions are visible</small>
+    </div>
+    
+    <div class="notes-group">
+        <label for="notes">Additional Notes (optional):</label>
+        <textarea name="notes" id="notes" placeholder="Any restrictions, endorsements, or additional information..."></textarea>
+    </div>
+    
+    <button type="submit">Upload Driver's License</button>
+</form>

@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory
 from models import db, ClientRequest, Module, AccessLog
 from flask_migrate import Migrate
-from werkzeug.utils import secure_filename
-import os
 import uuid
 from datetime import datetime, timedelta
+
+from handlers.file_handler import FileModuleHandler
+from handlers.form_handler import FormModuleHandler
+from handlers.insurance_card_handler import InsuranceCardModuleHandler
+from handlers.drivers_license_handler import DriversLicenseModuleHandler
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///filemaster.db'
@@ -12,81 +15,15 @@ app.config['SECRET_KEY'] = 'dev'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
-# Accept common document and image formats
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic'}
-
-
-def allowed_file(filename: str) -> bool:
-    """Return ``True`` if ``filename`` has an approved extension."""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 db.init_app(app)
 migrate = Migrate(app, db)
-
-
-class FileModuleHandler:
-    template = 'modules/file.html'
-
-    def render(self, module):
-        return render_template(self.template, module=module)
-
-    def process(self, module):
-        f = request.files.get('file')
-        if f and allowed_file(f.filename):
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            safe = secure_filename(f.filename)
-            fname = f"{uuid.uuid4().hex}_{safe}"
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
-            module.completed = True
-            module.file_path = fname
-
-
-class FormModuleHandler:
-    template = 'modules/form.html'
-
-    def render(self, module):
-        return render_template(self.template, module=module)
-
-    def process(self, module):
-        answer = request.form.get('answer')
-        if answer:
-            module.completed = True
-            module.answer = answer
-
-
-class DriverLicenseModuleHandler(FileModuleHandler):
-    """Handler for uploading a driver's license image."""
-
-    template = 'modules/driver_license.html'
-
-
-class InsuranceCardModuleHandler:
-    """Handle uploads for insurance card front/back images."""
-
-    template = 'modules/insurance_card.html'
-
-    def render(self, module):
-        return render_template(self.template, module=module)
-
-    def process(self, module):
-        front = request.files.get('front')
-        back = request.files.get('back')
-        if front and back and allowed_file(front.filename) and allowed_file(back.filename):
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            front_name = f"{uuid.uuid4().hex}_{secure_filename(front.filename)}"
-            back_name = f"{uuid.uuid4().hex}_{secure_filename(back.filename)}"
-            front.save(os.path.join(app.config['UPLOAD_FOLDER'], front_name))
-            back.save(os.path.join(app.config['UPLOAD_FOLDER'], back_name))
-            module.front_path = front_name
-            module.back_path = back_name
-            module.completed = True
 
 
 MODULE_HANDLERS = {
     'file': FileModuleHandler(),
     'form': FormModuleHandler(),
-    'license': DriverLicenseModuleHandler(),
-    'insurance': InsuranceCardModuleHandler(),
+    'drivers_license': DriversLicenseModuleHandler(),
+    'insurance_card': InsuranceCardModuleHandler(),
 }
 
 
@@ -104,8 +41,8 @@ def create_dummy():
     req = ClientRequest(token=token, expires_at=expires_at)
     mod1 = Module(request=req, kind='file', description='Upload proof of income')
     mod2 = Module(request=req, kind='form', description='Provide credit score')
-    mod3 = Module(request=req, kind='license', description="Upload your driver's license")
-    mod4 = Module(request=req, kind='insurance', description='Upload your insurance card')
+    mod3 = Module(request=req, kind='drivers_license', description="Upload your driver's license")
+    mod4 = Module(request=req, kind='insurance_card', description='Upload your insurance card')
     db.session.add_all([req, mod1, mod2, mod3, mod4])
     db.session.commit()
     return f"Created request with token: {token}\nVisit /request/{token} to view it."
@@ -178,7 +115,8 @@ def handle_module(module_id):
     handler = MODULE_HANDLERS.get(module.kind)
     if not handler:
         abort(400, "Unknown module type")
-    handler.process(module)
+    if not handler.process_submission(module, request):
+        abort(400, "Invalid submission")
     db.session.add(
         AccessLog(
             request_id=module.request_id,
