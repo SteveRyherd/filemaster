@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory
 from models import db, ClientRequest, Module, AccessLog
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
@@ -47,6 +47,7 @@ class FileModuleHandler:
             fname = f"{uuid.uuid4().hex}_{f.filename}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
             module.completed = True
+            module.file_path = fname
 
 
 class FormModuleHandler:
@@ -59,12 +60,19 @@ class FormModuleHandler:
         answer = request.form.get('answer')
         if answer:
             module.completed = True
+            module.answer = answer
 
 
 MODULE_HANDLERS = {
     'file': FileModuleHandler(),
     'form': FormModuleHandler(),
 }
+
+
+@app.route('/')
+def index():
+    """Landing page with links to common actions."""
+    return render_template('index.html')
 
 @app.route('/create_dummy')
 def create_dummy():
@@ -100,6 +108,18 @@ def view_logs():
         .all()
     )
     return render_template('admin_logs.html', logs=logs)
+
+@app.route('/admin/request/<token>')
+def admin_request_detail(token):
+    """View details for a specific request."""
+    req = ClientRequest.query.filter_by(token=token).first_or_404()
+    return render_template('admin_request_detail.html', req=req)
+
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
 
 @app.route('/request/<token>')
 def view_request(token):
