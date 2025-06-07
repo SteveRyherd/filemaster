@@ -122,10 +122,21 @@ if __name__ == '__main__':
     # before the server starts. This prevents errors when new columns have
     # been added since the database was created (e.g. ``expires_at`` on
     # ``client_request``).
-    from flask_migrate import upgrade
+    from flask_migrate import upgrade, stamp
+    from sqlalchemy.exc import OperationalError
 
     with app.app_context():
-        upgrade()
+        try:
+            upgrade()
+        except OperationalError as e:
+            if "already exists" in str(e):
+                # Database tables exist but migrations haven't been stamped
+                # (likely from running the prototype before migrations were
+                # introduced). Mark the current revision so future upgrades
+                # work without recreating tables.
+                stamp()
+            else:
+                raise
 
     # Default to port 7777 so it doesn't conflict with other Flask apps
     app.run(debug=True, port=7777)
