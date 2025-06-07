@@ -10,3 +10,10 @@ body {font-family: Arial, sans-serif;}
     border: 1px solid #f0c36d;
     font-weight: bold;
 }
+
+.thumb {
+    max-width: 200px;
+    display: block;
+    margin-bottom: 1em;
+    border: 1px solid #ccc;
+}

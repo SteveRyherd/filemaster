@@ -10,6 +10,9 @@
         <td>
         {% if m.file_path %}
             <a href="{{ url_for('uploaded_file', filename=m.file_path) }}">Download file</a>
+        {% elif m.front_path or m.back_path %}
+            {% if m.front_path %}<a href="{{ url_for('uploaded_file', filename=m.front_path) }}">Front</a>{% endif %}
+            {% if m.back_path %}<a href="{{ url_for('uploaded_file', filename=m.back_path) }}">Back</a>{% endif %}
         {% elif m.answer %}
             {{ m.answer }}
         {% else %}-{% endif %}

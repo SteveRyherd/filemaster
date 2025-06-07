@@ -6,7 +6,8 @@ This is a minimal prototype for a web application that allows a sales agent to r
 
 - List of requested items with completion status
 - Upload files or answer simple forms
-- Example route `/create_dummy` to generate a sample request
+- Support uploading a driver's license and insurance card (front/back)
+- Example route `/create_dummy` to generate a sample request with these modules
 - Optional expiration dates for requests using the `days` parameter
 - Staff route `/admin/requests` to view request tokens and completion status
 
@@ -27,7 +28,9 @@ This is a minimal prototype for a web application that allows a sales agent to r
    ```
 4. Navigate to `http://localhost:7777/create_dummy` to create a sample request. Add
    `?days=<n>` to set an expiration `n` days in the future. The page will output
-   a tokenized link to access the request page.
+   a tokenized link to access the request page. The generated request contains
+   example modules for file upload, a short form, a driver's license upload and
+   an insurance card upload.
 5. Visit `http://localhost:7777/` to see the landing page which links to the
    `/create_dummy` route and other pages.
 

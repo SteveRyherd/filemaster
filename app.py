@@ -12,22 +12,12 @@ app.config['SECRET_KEY'] = 'dev'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
-ALLOWED_MIMETYPES = {'application/pdf', 'image/png', 'image/jpeg'}
-
-
-def allowed_file(filename, mimetype):
-    return (
-        '.' in filename
-        and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-        and mimetype in ALLOWED_MIMETYPES
-    )
-
+# Accept common document and image formats
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic'}
 
 
 def allowed_file(filename: str) -> bool:
-    """Check if the file has an allowed extension."""
+    """Return ``True`` if ``filename`` has an approved extension."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db.init_app(app)
@@ -42,9 +32,10 @@ class FileModuleHandler:
 
     def process(self, module):
         f = request.files.get('file')
-        if f:
+        if f and allowed_file(f.filename):
             os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            fname = f"{uuid.uuid4().hex}_{f.filename}"
+            safe = secure_filename(f.filename)
+            fname = f"{uuid.uuid4().hex}_{safe}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
             module.completed = True
             module.file_path = fname
@@ -63,9 +54,39 @@ class FormModuleHandler:
             module.answer = answer
 
 
+class DriverLicenseModuleHandler(FileModuleHandler):
+    """Handler for uploading a driver's license image."""
+
+    template = 'modules/driver_license.html'
+
+
+class InsuranceCardModuleHandler:
+    """Handle uploads for insurance card front/back images."""
+
+    template = 'modules/insurance_card.html'
+
+    def render(self, module):
+        return render_template(self.template, module=module)
+
+    def process(self, module):
+        front = request.files.get('front')
+        back = request.files.get('back')
+        if front and back and allowed_file(front.filename) and allowed_file(back.filename):
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            front_name = f"{uuid.uuid4().hex}_{secure_filename(front.filename)}"
+            back_name = f"{uuid.uuid4().hex}_{secure_filename(back.filename)}"
+            front.save(os.path.join(app.config['UPLOAD_FOLDER'], front_name))
+            back.save(os.path.join(app.config['UPLOAD_FOLDER'], back_name))
+            module.front_path = front_name
+            module.back_path = back_name
+            module.completed = True
+
+
 MODULE_HANDLERS = {
     'file': FileModuleHandler(),
     'form': FormModuleHandler(),
+    'license': DriverLicenseModuleHandler(),
+    'insurance': InsuranceCardModuleHandler(),
 }
 
 
@@ -83,7 +104,9 @@ def create_dummy():
     req = ClientRequest(token=token, expires_at=expires_at)
     mod1 = Module(request=req, kind='file', description='Upload proof of income')
     mod2 = Module(request=req, kind='form', description='Provide credit score')
-    db.session.add_all([req, mod1, mod2])
+    mod3 = Module(request=req, kind='license', description="Upload your driver's license")
+    mod4 = Module(request=req, kind='insurance', description='Upload your insurance card')
+    db.session.add_all([req, mod1, mod2, mod3, mod4])
     db.session.commit()
     return f"Created request with token: {token}\nVisit /request/{token} to view it."
 
