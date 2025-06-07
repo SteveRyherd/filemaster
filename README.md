@@ -8,6 +8,7 @@ This is a minimal prototype for a web application that allows a sales agent to r
 - Upload files or answer simple forms
 - Example route `/create_dummy` to generate a sample request
 - Optional expiration dates for requests using the `days` parameter
+- Staff route `/admin/requests` to view request tokens and completion status
 
 ## Running
 
@@ -24,3 +25,4 @@ This is a minimal prototype for a web application that allows a sales agent to r
    a tokenized link to access the request page.
 
 This prototype uses SQLite for storage and saves uploaded files to the `uploads/` directory.
+Uploads are limited to 10MB and the server only accepts PDF or common image files.

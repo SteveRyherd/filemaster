@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, ClientRequest, Module
+from werkzeug.utils import secure_filename
 import os
 import uuid
 from datetime import datetime, timedelta
@@ -8,6 +9,25 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///filemaster.db'
 app.config['SECRET_KEY'] = 'dev'
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
+
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+ALLOWED_MIMETYPES = {'application/pdf', 'image/png', 'image/jpeg'}
+
+
+def allowed_file(filename, mimetype):
+    return (
+        '.' in filename
+        and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        and mimetype in ALLOWED_MIMETYPES
+    )
+
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic'}
+
+
+def allowed_file(filename: str) -> bool:
+    """Check if the file has an allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db.init_app(app)
 
@@ -27,6 +47,17 @@ def create_dummy():
     db.session.commit()
     return f"Created request with token: {token}\nVisit /request/{token} to view it."
 
+
+@app.route('/admin/requests')
+def list_requests():
+    """List all client requests with completion status."""
+    reqs = []
+    for r in ClientRequest.query.all():
+        total = len(r.modules)
+        completed = sum(1 for m in r.modules if m.completed)
+        reqs.append({'token': r.token, 'completed': completed, 'total': total})
+    return render_template('admin_requests.html', requests=reqs)
+
 @app.route('/request/<token>')
 def view_request(token):
     req = ClientRequest.query.filter_by(token=token).first_or_404()
@@ -43,9 +74,9 @@ def handle_module(module_id):
     module = Module.query.get_or_404(module_id)
     if module.kind == 'file':
         f = request.files.get('file')
-        if f:
+        if f and allowed_file(f.filename, f.mimetype):
             os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            fname = f"{uuid.uuid4().hex}_{f.filename}"
+            fname = f"{uuid.uuid4().hex}_{secure_filename(f.filename)}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
             module.completed = True
     elif module.kind == 'form':
