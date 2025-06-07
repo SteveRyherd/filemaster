@@ -5,7 +5,7 @@
     <tr><th>Token</th><th>Status</th></tr>
     {% for r in requests %}
     <tr>
-        <td>{{ r.token }}</td>
+        <td><a href="{{ url_for('admin_request_detail', token=r.token) }}">{{ r.token }}</a></td>
         <td>{{ r.completed }}/{{ r.total }} complete</td>
     </tr>
     {% endfor %}

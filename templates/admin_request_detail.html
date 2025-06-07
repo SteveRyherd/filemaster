@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Request {{ req.token }}</h2>
+<table>
+    <tr><th>Description</th><th>Status</th><th>Data</th></tr>
+    {% for m in req.modules %}
+    <tr>
+        <td>{{ m.description }}</td>
+        <td>{{ 'Complete' if m.completed else 'Incomplete' }}</td>
+        <td>
+        {% if m.file_path %}
+            <a href="{{ url_for('uploaded_file', filename=m.file_path) }}">Download file</a>
+        {% elif m.answer %}
+            {{ m.answer }}
+        {% else %}-{% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{{ url_for('list_requests') }}">Back to requests</a>
+{% endblock %}
