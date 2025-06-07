@@ -14,7 +14,7 @@ This is a minimal prototype for a web application that allows a sales agent to r
    ```bash
    pip install -r requirements.txt
    ```
-2. Start the server:
+2. Start the server (the database tables will be created automatically):
    ```bash
    python app.py
    ```
