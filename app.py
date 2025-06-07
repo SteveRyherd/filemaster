@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, abort
 from models import db, ClientRequest, Module
 from werkzeug.utils import secure_filename
 import os
@@ -30,6 +30,39 @@ def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db.init_app(app)
+
+
+class FileModuleHandler:
+    template = 'modules/file.html'
+
+    def render(self, module):
+        return render_template(self.template, module=module)
+
+    def process(self, module):
+        f = request.files.get('file')
+        if f:
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            fname = f"{uuid.uuid4().hex}_{f.filename}"
+            f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
+            module.completed = True
+
+
+class FormModuleHandler:
+    template = 'modules/form.html'
+
+    def render(self, module):
+        return render_template(self.template, module=module)
+
+    def process(self, module):
+        answer = request.form.get('answer')
+        if answer:
+            module.completed = True
+
+
+MODULE_HANDLERS = {
+    'file': FileModuleHandler(),
+    'form': FormModuleHandler(),
+}
 
 with app.app_context():
     db.create_all()
@@ -67,22 +100,21 @@ def view_request(token):
     selected = Module.query.get(selected_id) if selected_id else None
     if not selected:
         selected = next((m for m in req.modules if not m.completed), None)
-    return render_template('request.html', req=req, selected=selected)
+    module_html = None
+    if selected:
+        handler = MODULE_HANDLERS.get(selected.kind)
+        if not handler:
+            abort(400, "Unknown module type")
+        module_html = handler.render(selected)
+    return render_template('request.html', req=req, selected=selected, module_html=module_html)
 
 @app.route('/module/<int:module_id>', methods=['POST'])
 def handle_module(module_id):
     module = Module.query.get_or_404(module_id)
-    if module.kind == 'file':
-        f = request.files.get('file')
-        if f and allowed_file(f.filename, f.mimetype):
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            fname = f"{uuid.uuid4().hex}_{secure_filename(f.filename)}"
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
-            module.completed = True
-    elif module.kind == 'form':
-        answer = request.form.get('answer')
-        if answer:
-            module.completed = True
+    handler = MODULE_HANDLERS.get(module.kind)
+    if not handler:
+        abort(400, "Unknown module type")
+    handler.process(module)
     db.session.commit()
     return redirect(url_for('view_request', token=module.request.token))
 
