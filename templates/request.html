@@ -11,6 +11,13 @@
             </li>
         {% endfor %}
         </ul>
+        {% if req.expires_at %}
+            <p class="expiration">
+                Expires {{ req.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}
+            </p>
+        {% else %}
+            <p class="expiration">No expiration.</p>
+        {% endif %}
     </div>
     <div class="module">
         {% if selected %}
