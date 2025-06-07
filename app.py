@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory
 from models import db, ClientRequest, Module
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
@@ -47,6 +47,7 @@ class FileModuleHandler:
             fname = f"{uuid.uuid4().hex}_{f.filename}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
             module.completed = True
+            module.file_path = fname
 
 
 class FormModuleHandler:
@@ -59,6 +60,7 @@ class FormModuleHandler:
         answer = request.form.get('answer')
         if answer:
             module.completed = True
+            module.answer = answer
 
 
 MODULE_HANDLERS = {
@@ -89,6 +91,18 @@ def list_requests():
         completed = sum(1 for m in r.modules if m.completed)
         reqs.append({'token': r.token, 'completed': completed, 'total': total})
     return render_template('admin_requests.html', requests=reqs)
+
+
+@app.route('/admin/request/<token>')
+def admin_request_detail(token):
+    """View details for a specific request."""
+    req = ClientRequest.query.filter_by(token=token).first_or_404()
+    return render_template('admin_request_detail.html', req=req)
+
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 @app.route('/request/<token>')
 def view_request(token):
