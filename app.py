@@ -118,5 +118,14 @@ def handle_module(module_id):
     return redirect(url_for('view_request', token=module.request.token))
 
 if __name__ == '__main__':
+    # Automatically apply migrations so the database schema is up to date
+    # before the server starts. This prevents errors when new columns have
+    # been added since the database was created (e.g. ``expires_at`` on
+    # ``client_request``).
+    from flask_migrate import upgrade
+
+    with app.app_context():
+        upgrade()
+
     # Default to port 7777 so it doesn't conflict with other Flask apps
     app.run(debug=True, port=7777)
