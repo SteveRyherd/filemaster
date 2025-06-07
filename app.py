@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, ClientRequest, Module
+from werkzeug.utils import secure_filename
 import os
 import uuid
 
@@ -7,6 +8,13 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///filemaster.db'
 app.config['SECRET_KEY'] = 'dev'
 app.config['UPLOAD_FOLDER'] = 'uploads'
+
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic'}
+
+
+def allowed_file(filename: str) -> bool:
+    """Check if the file has an allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db.init_app(app)
 
@@ -38,9 +46,9 @@ def handle_module(module_id):
     module = Module.query.get_or_404(module_id)
     if module.kind == 'file':
         f = request.files.get('file')
-        if f:
+        if f and allowed_file(f.filename):
             os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            fname = f"{uuid.uuid4().hex}_{f.filename}"
+            fname = f"{uuid.uuid4().hex}_{secure_filename(f.filename)}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
             module.completed = True
     elif module.kind == 'form':
