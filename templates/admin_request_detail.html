@@ -2,23 +2,108 @@
 {% block content %}
 <h2>Request {{ req.token }}</h2>
 <table>
-    <tr><th>Description</th><th>Status</th><th>Data</th></tr>
+    <tr><th>Description</th><th>Type</th><th>Status</th><th>Data</th></tr>
     {% for m in req.modules %}
     <tr>
         <td>{{ m.description }}</td>
+        <td>{{ m.kind }}</td>
         <td>{{ 'Complete' if m.completed else 'Incomplete' }}</td>
         <td>
-        {% if m.file_path %}
-            <a href="{{ url_for('uploaded_file', filename=m.file_path) }}">Download file</a>
-        {% elif m.front_path or m.back_path %}
-            {% if m.front_path %}<a href="{{ url_for('uploaded_file', filename=m.front_path) }}">Front</a>{% endif %}
-            {% if m.back_path %}<a href="{{ url_for('uploaded_file', filename=m.back_path) }}">Back</a>{% endif %}
-        {% elif m.answer %}
-            {{ m.answer }}
-        {% else %}-{% endif %}
+            {% if m.completed and m.result_data %}
+                {% if m.kind == 'file' %}
+                    <a href="{{ url_for('uploaded_file', filename=m.result_data.file_path) }}">
+                        Download: {{ m.result_data.original_filename }}
+                    </a>
+                    <br><small>Size: {{ (m.result_data.file_size / 1024) | round(1) }} KB</small>
+                
+                {% elif m.kind == 'insurance_card' or m.kind == 'drivers_license' %}
+                    <div class="dual-file-display">
+                        <div>
+                            <strong>Front:</strong> 
+                            <a href="{{ url_for('uploaded_file', filename=m.result_data.front_file.file_path) }}">
+                                {{ m.result_data.front_file.original_filename }}
+                            </a>
+                        </div>
+                        <div>
+                            <strong>Back:</strong> 
+                            <a href="{{ url_for('uploaded_file', filename=m.result_data.back_file.file_path) }}">
+                                {{ m.result_data.back_file.original_filename }}
+                            </a>
+                        </div>
+                        {% if m.result_data.notes %}
+                            <div><strong>Notes:</strong> {{ m.result_data.notes }}</div>
+                        {% endif %}
+                    </div>
+                
+                {% elif m.kind == 'form' %}
+                    <div class="form-answer">
+                        {{ m.result_data.answer | truncate(100) }}
+                        {% if m.result_data.answer | length > 100 %}
+                            <button onclick="showFullAnswer('{{ m.id }}')">Show Full Answer</button>
+                            <div id="full-answer-{{ m.id }}" style="display: none;">
+                                {{ m.result_data.answer }}
+                            </div>
+                        {% endif %}
+                    </div>
+                
+                {% else %}
+                    <!-- Generic JSON display for unknown types -->
+                    <pre>{{ m.result_data | tojson(indent=2) }}</pre>
+                {% endif %}
+            {% else %}
+                <span class="incomplete">Not completed</span>
+            {% endif %}
         </td>
     </tr>
     {% endfor %}
 </table>
+
 <a href="{{ url_for('list_requests') }}">Back to requests</a>
+
+<script>
+function showFullAnswer(moduleId) {
+    const fullDiv = document.getElementById('full-answer-' + moduleId);
+    const button = event.target;
+    
+    if (fullDiv.style.display === 'none') {
+        fullDiv.style.display = 'block';
+        button.textContent = 'Hide Full Answer';
+    } else {
+        fullDiv.style.display = 'none';
+        button.textContent = 'Show Full Answer';
+    }
+}
+</script>
+
+<style>
+.dual-file-display {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    border-radius: 3px;
+    background: #f9f9f9;
+}
+
+.dual-file-display div {
+    margin: 0.25em 0;
+}
+
+.form-answer {
+    max-width: 400px;
+    word-wrap: break-word;
+}
+
+.incomplete {
+    color: #999;
+    font-style: italic;
+}
+
+pre {
+    background: #f5f5f5;
+    padding: 0.5em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    max-width: 400px;
+    overflow-x: auto;
+}
+</style>
 {% endblock %}
