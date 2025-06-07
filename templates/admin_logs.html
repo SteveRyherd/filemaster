@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Access Logs</h2>
+<table>
+    <tr><th>Time</th><th>Request ID</th><th>Module ID</th><th>IP</th><th>Action</th></tr>
+    {% for log in logs %}
+    <tr>
+        <td>{{ log.timestamp }}</td>
+        <td>{{ log.request_id }}</td>
+        <td>{{ log.module_id or '' }}</td>
+        <td>{{ log.ip_address }}</td>
+        <td>{{ log.action }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
