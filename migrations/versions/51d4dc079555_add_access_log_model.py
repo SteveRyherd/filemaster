@@ -1,7 +1,7 @@
 """add access log model
 
 Revision ID: 51d4dc079555
-Revises: 3fe570611070
+Revises: 09a08d6fa0c2
 Create Date: 2025-06-07 21:59:02.150649
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '51d4dc079555'
-down_revision = '3fe570611070'
+down_revision = '09a08d6fa0c2'
 branch_labels = None
 depends_on = None
 
