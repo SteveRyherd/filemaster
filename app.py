@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, abort
 from models import db, ClientRequest, Module
+from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 import os
 import uuid
@@ -30,6 +31,7 @@ def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db.init_app(app)
+migrate = Migrate(app, db)
 
 
 class FileModuleHandler:
@@ -63,9 +65,6 @@ MODULE_HANDLERS = {
     'file': FileModuleHandler(),
     'form': FormModuleHandler(),
 }
-
-with app.app_context():
-    db.create_all()
 
 @app.route('/create_dummy')
 def create_dummy():

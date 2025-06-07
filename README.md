@@ -16,13 +16,28 @@ This is a minimal prototype for a web application that allows a sales agent to r
    ```bash
    pip install -r requirements.txt
    ```
-2. Start the server (the database tables will be created automatically). By default it runs on port `7777`:
+2. Initialize the database (set `FLASK_APP=app.py` first):
+   ```bash
+   export FLASK_APP=app.py
+   flask db upgrade
+   ```
+3. Start the server. By default it runs on port `7777`:
    ```bash
    python app.py
    ```
-3. Navigate to `http://localhost:7777/create_dummy` to create a sample request. Add
+4. Navigate to `http://localhost:7777/create_dummy` to create a sample request. Add
    `?days=<n>` to set an expiration `n` days in the future. The page will output
    a tokenized link to access the request page.
 
 This prototype uses SQLite for storage and saves uploaded files to the `uploads/` directory.
 Uploads are limited to 10MB and the server only accepts PDF or common image files.
+
+### Database migrations
+
+Schema changes are managed using **Flask-Migrate**. When you modify the models,
+create a new migration and upgrade the database:
+
+```bash
+flask db migrate -m "describe change"
+flask db upgrade
+```
