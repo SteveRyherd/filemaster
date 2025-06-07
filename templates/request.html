@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="layout">
+    <div class="queue">
+        <h2>Requested Items</h2>
+        <ul>
+        {% for m in req.modules %}
+            <li>
+            {% if m.completed %}&#10003;{% else %}&#9633;{% endif %}
+            <a href="{{ url_for('view_request', token=req.token, module=m.id) }}">{{ m.description }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="module">
+        {% if selected %}
+            {% if selected.kind == 'file' %}
+            <form action="{{ url_for('handle_module', module_id=selected.id) }}" method="post" enctype="multipart/form-data">
+                <p>{{ selected.description }}</p>
+                <input type="file" name="file" required>
+                <button type="submit">Upload</button>
+            </form>
+            {% elif selected.kind == 'form' %}
+            <form action="{{ url_for('handle_module', module_id=selected.id) }}" method="post">
+                <p>{{ selected.description }}</p>
+                <textarea name="answer" required></textarea>
+                <button type="submit">Submit</button>
+            </form>
+            {% endif %}
+        {% else %}
+            <p>All tasks complete!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
