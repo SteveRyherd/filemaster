@@ -51,4 +51,5 @@ def handle_module(module_id):
     return redirect(url_for('view_request', token=module.request.token))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Default to port 7777 so it doesn't conflict with other Flask apps
+    app.run(debug=True, port=7777)

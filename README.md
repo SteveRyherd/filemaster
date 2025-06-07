@@ -14,10 +14,10 @@ This is a minimal prototype for a web application that allows a sales agent to r
    ```bash
    pip install -r requirements.txt
    ```
-2. Start the server (the database tables will be created automatically):
+2. Start the server (the database tables will be created automatically). By default it runs on port `7777`:
    ```bash
    python app.py
    ```
-3. Navigate to `http://localhost:5000/create_dummy` to create a sample request. The page will output a tokenized link to access the request page.
+3. Navigate to `http://localhost:7777/create_dummy` to create a sample request. The page will output a tokenized link to access the request page.
 
 This prototype uses SQLite for storage and saves uploaded files to the `uploads/` directory.
