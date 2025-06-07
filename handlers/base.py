@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 from flask import render_template
+import traceback
 
 
 class ModuleResult:
@@ -58,7 +59,10 @@ class BaseModuleHandler(ABC):
             module.update_results(result.to_dict())
             module.completed = True
             return True
-        except Exception:
+        except Exception as e:
+            # Log the actual error for debugging
+            print(f"Error processing {self.module_type} module: {e}")
+            print(f"Traceback: {traceback.format_exc()}")
             return False
 
     def render(self, module):

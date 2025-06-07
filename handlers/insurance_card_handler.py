@@ -13,8 +13,12 @@ class InsuranceCardResult(ModuleResult):
 
 
 class InsuranceCardModuleHandler(BaseModuleHandler):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
-    ALLOWED_MIMETYPES = {'image/png', 'image/jpeg', 'application/pdf'}
+    # Expanded to match file handler capabilities
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'pdf'}
+    ALLOWED_MIMETYPES = {
+        'image/png', 'image/jpeg', 'image/jpg', 'image/gif', 
+        'image/heic', 'application/pdf'
+    }
 
     @property
     def module_type(self) -> str:
@@ -48,8 +52,10 @@ class InsuranceCardModuleHandler(BaseModuleHandler):
         back_file = request_data.files.get('back_file')
         notes = request_data.form.get('notes', '')
 
-        if not front_file or not back_file:
-            raise ValueError("Both front and back images are required")
+        if not front_file or front_file.filename == '':
+            raise ValueError("Front image is required")
+        if not back_file or back_file.filename == '':
+            raise ValueError("Back image is required")
 
         front_data = self._process_file(front_file, 'front')
         back_data = self._process_file(back_file, 'back')
@@ -62,7 +68,9 @@ class InsuranceCardModuleHandler(BaseModuleHandler):
 
     def _process_file(self, file, prefix: str) -> Dict[str, Any]:
         if not self._allowed_file(file.filename, file.mimetype):
-            raise ValueError(f"{prefix.title()} file type not allowed")
+            raise ValueError(f"{prefix.title()} file type not allowed. "
+                           f"Filename: {file.filename}, Mimetype: {file.mimetype}. "
+                           f"Allowed extensions: {', '.join(self.ALLOWED_EXTENSIONS)}")
 
         upload_folder = current_app.config['UPLOAD_FOLDER']
         os.makedirs(upload_folder, exist_ok=True)
@@ -90,4 +98,7 @@ class InsuranceCardModuleHandler(BaseModuleHandler):
         if not filename or '.' not in filename:
             return False
         extension = filename.rsplit('.', 1)[1].lower()
-        return extension in self.ALLOWED_EXTENSIONS and mimetype in self.ALLOWED_MIMETYPES
+        # Check extension OR mimetype (more flexible)
+        extension_ok = extension in self.ALLOWED_EXTENSIONS
+        mimetype_ok = mimetype in self.ALLOWED_MIMETYPES
+        return extension_ok and mimetype_ok
