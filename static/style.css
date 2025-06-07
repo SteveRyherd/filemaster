@@ -1,0 +1,4 @@
+body {font-family: Arial, sans-serif;}
+.layout {display: flex;}
+.queue {width: 40%; padding:1em; border-right: 1px solid #ccc;}
+.module {flex:1; padding:1em;}
