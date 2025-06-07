@@ -8,6 +8,18 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///filemaster.db'
 app.config['SECRET_KEY'] = 'dev'
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
+
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+ALLOWED_MIMETYPES = {'application/pdf', 'image/png', 'image/jpeg'}
+
+
+def allowed_file(filename, mimetype):
+    return (
+        '.' in filename
+        and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        and mimetype in ALLOWED_MIMETYPES
+    )
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic'}
 
@@ -46,7 +58,7 @@ def handle_module(module_id):
     module = Module.query.get_or_404(module_id)
     if module.kind == 'file':
         f = request.files.get('file')
-        if f and allowed_file(f.filename):
+        if f and allowed_file(f.filename, f.mimetype):
             os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
             fname = f"{uuid.uuid4().hex}_{secure_filename(f.filename)}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
