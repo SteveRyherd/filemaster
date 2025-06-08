@@ -1,6 +1,7 @@
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
-from flask import url_for, Markup, redirect, request
+from flask import url_for, redirect, request
+from markupsafe import Markup
 from models import db, ClientRequest, Module, AccessLog
 from datetime import datetime
 
