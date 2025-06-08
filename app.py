@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory
 from models import db, ClientRequest, Module, AccessLog
 from flask_migrate import Migrate
+from admin_views import setup_admin
 import uuid
 from datetime import datetime, timedelta
 
@@ -17,6 +18,7 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
 db.init_app(app)
 migrate = Migrate(app, db)
+admin = setup_admin(app)
 
 
 MODULE_HANDLERS = {
@@ -48,30 +50,9 @@ def create_dummy():
     return f"Created request with token: {token}\nVisit /request/{token} to view it."
 
 
-@app.route('/admin/requests')
-def list_requests():
-    """List all client requests with completion status."""
-    reqs = []
-    for r in ClientRequest.query.all():
-        total = len(r.modules)
-        completed = sum(1 for m in r.modules if m.completed)
-        reqs.append({'token': r.token, 'completed': completed, 'total': total})
-    return render_template('admin_requests.html', requests=reqs)
-
-
-@app.route('/admin/logs')
-def view_logs():
-    """Display recent access logs."""
-    logs = (
-        AccessLog.query.order_by(AccessLog.timestamp.desc())
-        .limit(100)
-        .all()
-    )
-    return render_template('admin_logs.html', logs=logs)
-
-@app.route('/admin/request/<token>')
+@app.route('/admin/request-detail/<token>')
 def admin_request_detail(token):
-    """View details for a specific request."""
+    """Detailed view of a specific request - keep this for now."""
     req = ClientRequest.query.filter_by(token=token).first_or_404()
     return render_template('admin_request_detail.html', req=req)
 
