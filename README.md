@@ -9,7 +9,7 @@ This is a minimal prototype for a web application that allows a sales agent to r
 - Support uploading a driver's license and insurance card (front/back)
 - Example route `/create_dummy` to generate a sample request with these modules
 - Optional expiration dates for requests using the `days` parameter
-- Staff route `/admin/requests` to view request tokens and completion status
+- Built-in admin pages under `/admin` to create, edit and monitor client requests
 
 ## Running
 
