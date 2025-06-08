@@ -24,7 +24,7 @@ class ClientRequestView(ModelView):
     can_edit = False
     can_create = False
     
-    def _completion_status_formatter(self, context, model, name):
+    def _completion_status_formatter(view, context, model, name):
         """Format completion status as 'X/Y complete'."""
         total = len(model.modules)
         completed = sum(1 for m in model.modules if m.completed)
@@ -34,12 +34,12 @@ class ClientRequestView(ModelView):
         else:
             return Markup(f'<span>{completed}/{total}</span>')
     
-    def _token_formatter(self, context, model, name):
-        """Make token clickable to request detail."""
-        detail_url = url_for('admin_request_detail', token=model.token)
-        return Markup(f'<a href="{detail_url}" target="_blank">{model.token}</a>')
+    def _token_formatter(view, context, model, name):
+        """Make token clickable to admin request detail."""
+        detail_url = f'/admin/requestdetail/{model.token}'
+        return Markup(f'<a href="{detail_url}">{model.token}</a>')
     
-    def _modules_formatter(self, context, model, name):
+    def _modules_formatter(view, context, model, name):
         """Show module count and types."""
         if not model.modules:
             return "No modules"
@@ -57,7 +57,6 @@ class ClientRequestView(ModelView):
         'token': _token_formatter,
         'created_modules': _modules_formatter,
     }
-    
 
 
 class ModuleView(ModelView):
@@ -68,17 +67,18 @@ class ModuleView(ModelView):
     column_filters = ['kind', 'completed']
     column_default_sort = ('id', True)
     
-    # Make request token clickable
-    def _request_token_formatter(self, context, model, name):
-        return Markup(f'<a href="{url_for("view_request", token=model.request.token)}" target="_blank">{model.request.token}</a>')
+    # Make request token clickable to admin detail view
+    def _request_token_formatter(view, context, model, name):
+        admin_detail_url = f'/admin/requestdetail/{model.request.token}'
+        return Markup(f'<a href="{admin_detail_url}">{model.request.token}</a>')
     
-    def _completion_formatter(self, context, model, name):
+    def _completion_formatter(view, context, model, name):
         if model.completed:
             return Markup('<span style="color: green;">✓ Complete</span>')
         else:
             return Markup('<span style="color: orange;">⏳ Pending</span>')
     
-    def _has_data_formatter(self, context, model, name):
+    def _has_data_formatter(view, context, model, name):
         if model.result_data:
             return Markup('<span style="color: blue;">📄 Has Data</span>')
         else:
@@ -114,27 +114,43 @@ class AccessLogView(ModelView):
 class RequestDetailView(BaseView):
     """Custom view for detailed request inspection."""
     
+    def is_accessible(self):
+        # Only show this menu item when we're viewing a specific request
+        return 'token' in request.view_args if request.view_args else False
+    
     @expose('/')
     def index(self):
-        return '<p>Select a request from the ClientRequest view to see details.</p>'
+        return redirect('/admin/')
     
-    @expose('/request/<token>')
+    @expose('/<token>')
     def view_request(self, token):
-        """Detailed view of a specific request."""
+        """Detailed view of a specific request with Flask-Admin navigation."""
         req = ClientRequest.query.filter_by(token=token).first_or_404()
         
-        # This could render a custom template or redirect to existing route
-        return redirect(url_for('admin_request_detail', token=token))
+        # Get selected module from query parameter
+        selected_id = request.args.get('module')
+        selected = None
+        
+        if selected_id:
+            # Try to find the specific module
+            selected = Module.query.filter_by(id=selected_id, request_id=req.id).first()
+        
+        if not selected and req.modules:
+            # Default to first completed module, or first module if none completed
+            completed_modules = [m for m in req.modules if m.completed]
+            selected = completed_modules[0] if completed_modules else req.modules[0]
+        
+        return self.render('admin_request_detail_with_nav.html', req=req, selected=selected)
 
 
 def setup_admin(app):
     """Initialize Flask-Admin with custom views."""
     
     admin = Admin(
-        app,
+        app, 
         name='FileMaster Admin',
         template_mode='bootstrap3',
-        url='/admin'
+        url='/admin'  # This replaces your /admin routes
     )
     
     # Add model views
@@ -143,6 +159,6 @@ def setup_admin(app):
     admin.add_view(AccessLogView(AccessLog, db.session, name='Access Logs'))
     
     # Add custom views
-    admin.add_view(RequestDetailView(name='Request Details', endpoint='request_detail'))
+    admin.add_view(RequestDetailView(name='Request Details', endpoint='requestdetail'))
     
     return admin

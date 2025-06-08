@@ -40,7 +40,7 @@ def create_dummy():
     days = request.args.get('days', type=int)
     expires_at = datetime.utcnow() + timedelta(days=days) if days else None
     token = uuid.uuid4().hex
-    req = ClientRequest(token=token, expires_at=expires_at)
+    reqa = ClientRequest(token=token, expires_at=expires_at)
     mod1 = Module(request=req, kind='file', description='Upload proof of income')
     mod2 = Module(request=req, kind='form', description='Provide credit score')
     mod3 = Module(request=req, kind='drivers_license', description="Upload your driver's license")
@@ -50,11 +50,25 @@ def create_dummy():
     return f"Created request with token: {token}\nVisit /request/{token} to view it."
 
 
-@app.route('/admin/request-detail/<token>')
-def admin_request_detail(token):
-    """Detailed view of a specific request - keep this for now."""
-    req = ClientRequest.query.filter_by(token=token).first_or_404()
-    return render_template('admin_request_detail.html', req=req)
+# @app.route('/admin/request-detail/<token>')
+# def admin_request_detail(token):
+#     """Detailed view of a specific request with module selection."""
+#     req = ClientRequest.query.filter_by(token=token).first_or_404()
+    
+#     # Get selected module from query parameter
+#     selected_id = request.args.get('module')
+#     selected = None
+    
+#     if selected_id:
+#         # Try to find the specific module
+#         selected = Module.query.filter_by(id=selected_id, request_id=req.id).first()
+    
+#     if not selected and req.modules:
+#         # Default to first completed module, or first module if none completed
+#         completed_modules = [m for m in req.modules if m.completed]
+#         selected = completed_modules[0] if completed_modules else req.modules[0]
+    
+#     return render_template('admin_request_detail.html', req=req, selected=selected)
 
 
 @app.route('/uploads/<path:filename>')

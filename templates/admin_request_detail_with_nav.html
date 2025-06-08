@@ -1,5 +1,6 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'admin/master.html' %}
+
+{% block body %}
 <div class="admin-header">
     <h2>Request {{ req.token }}</h2>
     <div class="request-meta">
@@ -8,7 +9,7 @@
         {% else %}
             <span class="no-expiration">No expiration</span>
         {% endif %}
-        <a href="/admin/clientrequest/" class="back-link">← Back to All Requests</a>
+        <a href="{{ url_for('clientrequest.index_view') }}" class="back-link">← Back to All Requests</a>
     </div>
 </div>
 
@@ -155,8 +156,15 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
 
+{% block tail %}
 <style>
+body { font-family: Arial, sans-serif; }
+.layout { display: flex; }
+.queue { width: 40%; padding: 1em; border-right: 1px solid #ccc; }
+.module { flex: 1; padding: 1em; }
+
 .admin-header {
     display: flex;
     justify-content: space-between;
