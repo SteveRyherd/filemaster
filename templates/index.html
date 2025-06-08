@@ -1,9 +1,232 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Welcome to FileMaster</h2>
-<p>This prototype demonstrates simple client file requests.</p>
-<ul>
-  <li><a href="{{ url_for('create_dummy') }}">Create dummy request</a></li>
-  <li><a href="/admin/">Admin Dashboard</a></li>
-</ul>
+<div class="welcome-header">
+    <h2>Welcome to FileMaster</h2>
+    <p>Streamlined client information collection and document management.</p>
+</div>
+
+<div class="feature-grid">
+    <div class="feature-card admin">
+        <h3>🔧 Admin Tools</h3>
+        <p>Create and manage client requests with custom modules and expiration dates.</p>
+        <div class="feature-links">
+            <a href="{{ url_for('create_request') }}" class="btn-primary">Create New Request</a>
+            <a href="{{ url_for('list_requests') }}" class="btn-secondary">Manage Requests</a>
+        </div>
+    </div>
+
+    <div class="feature-card monitoring">
+        <h3>📊 Monitoring</h3>
+        <p>Track client activity and access patterns across all requests.</p>
+        <div class="feature-links">
+            <a href="{{ url_for('view_logs') }}" class="btn-secondary">View Access Logs</a>
+        </div>
+    </div>
+
+    <div class="feature-card testing">
+        <h3>🧪 Testing</h3>
+        <p>Quick tools for testing and development purposes.</p>
+        <div class="feature-links">
+            <a href="{{ url_for('create_dummy') }}" class="btn-secondary">Create Dummy Request</a>
+        </div>
+    </div>
+</div>
+
+<div class="info-section">
+    <h3>How it works</h3>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Create Request</h4>
+                <p>Choose which documents or information you need from your client</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Share Link</h4>
+                <p>Send the secure, unique link to your client - no account required</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Collect & Review</h4>
+                <p>Monitor progress and access submitted documents through the admin panel</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.welcome-header {
+    text-align: center;
+    margin-bottom: 3em;
+    padding: 2em 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.welcome-header h2 {
+    color: #007cba;
+    margin-bottom: 0.5em;
+    font-size: 2.5em;
+}
+
+.welcome-header p {
+    color: #6c757d;
+    font-size: 1.2em;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2em;
+    margin-bottom: 3em;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 8px;
+    padding: 2em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #007cba;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.feature-card.admin {
+    border-left-color: #007cba;
+}
+
+.feature-card.monitoring {
+    border-left-color: #28a745;
+}
+
+.feature-card.testing {
+    border-left-color: #ffc107;
+}
+
+.feature-card h3 {
+    margin: 0 0 1em 0;
+    color: #333;
+    font-size: 1.3em;
+}
+
+.feature-card p {
+    color: #6c757d;
+    margin-bottom: 1.5em;
+    line-height: 1.5;
+}
+
+.feature-links {
+    display: flex;
+    gap: 0.5em;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 0.75em 1.5em;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+    background: #007cba;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #005a87;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.info-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 2em;
+    margin-top: 2em;
+}
+
+.info-section h3 {
+    text-align: center;
+    margin-bottom: 2em;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2em;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1em;
+}
+
+.step-number {
+    background: #007cba;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    margin: 0 0 0.5em 0;
+    color: #333;
+}
+
+.step-content p {
+    margin: 0;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .welcome-header h2 {
+        font-size: 2em;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .feature-links {
+        flex-direction: column;
+    }
+    
+    .steps {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

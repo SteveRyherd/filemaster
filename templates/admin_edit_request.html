@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Edit Client Request: {{ req.token }}</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash-message flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="post" class="request-form">
+    <div class="form-section">
+        <h3>Request Settings</h3>
+        <div class="form-group">
+            <label for="expiration_days">Expiration (days from now):</label>
+            <input type="number" id="expiration_days" name="expiration_days" min="1" max="365" 
+                   placeholder="Leave empty for no expiration">
+            <small>
+                {% if req.expires_at %}
+                    Current expiration: {{ req.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}
+                {% else %}
+                    Currently no expiration set
+                {% endif %}
+            </small>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h3>Modules</h3>
+        <p>Edit which information you want to collect from the client:</p>
+        
+        {% set existing_modules = {} %}
+        {% for module in req.modules %}
+            {% if existing_modules.update({module.kind: module}) %}{% endif %}
+        {% endfor %}
+        
+        {% for module_type, default_desc in available_modules.items() %}
+        {% set existing_module = existing_modules.get(module_type) %}
+        <div class="module-item">
+            <div class="module-header">
+                <input type="checkbox" 
+                       id="module_{{ module_type }}" 
+                       name="module_{{ module_type }}" 
+                       {% if existing_module %}checked{% endif %}
+                       {% if existing_module and existing_module.completed %}disabled{% endif %}
+                       onchange="toggleDescription('{{ module_type }}')">
+                <label for="module_{{ module_type }}" class="module-label">
+                    <strong>{{ module_type.replace('_', ' ').title() }}</strong>
+                    {% if existing_module and existing_module.completed %}
+                        <span class="status-badge completed">✓ Completed</span>
+                    {% elif existing_module %}
+                        <span class="status-badge pending">⏱ Pending</span>
+                    {% else %}
+                        <span class="status-badge new">+ New</span>
+                    {% endif %}
+                </label>
+            </div>
+            <div class="module-description" 
+                 id="desc_group_{{ module_type }}" 
+                 style="{% if not existing_module %}display: none;{% endif %}">
+                <label for="desc_{{ module_type }}">Description for client:</label>
+                <input type="text" 
+                       id="desc_{{ module_type }}" 
+                       name="desc_{{ module_type }}" 
+                       value="{{ existing_module.description if existing_module else default_desc }}" 
+                       placeholder="Enter description..."
+                       {% if existing_module and existing_module.completed %}readonly{% endif %}>
+                {% if existing_module and existing_module.completed %}
+                    <small class="completed-note">Cannot edit description of completed module</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="request-info">
+        <h3>Request Status</h3>
+        <div class="status-summary">
+            <div class="status-item">
+                <strong>Total Modules:</strong> {{ req.modules | length }}
+            </div>
+            <div class="status-item">
+                <strong>Completed:</strong> {{ req.modules | selectattr('completed') | list | length }}
+            </div>
+            <div class="status-item">
+                <strong>Pending:</strong> {{ req.modules | rejectattr('completed') | list | length }}
+            </div>
+        </div>
+        <div class="client-link">
+            <strong>Client Link:</strong> 
+            <a href="{{ url_for('view_request', token=req.token) }}" target="_blank">
+                {{ url_for('view_request', token=req.token, _external=True) }}
+            </a>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary">Update Request</button>
+        <a href="{{ url_for('admin_request_detail', token=req.token) }}" class="btn-secondary">View Details</a>
+        <a href="{{ url_for('list_requests') }}" class="btn-secondary">Back to List</a>
+    </div>
+</form>
+
+<script>
+function toggleDescription(moduleType) {
+    const checkbox = document.getElementById('module_' + moduleType);
+    const descGroup = document.getElementById('desc_group_' + moduleType);
+    
+    if (checkbox.checked && !checkbox.disabled) {
+        descGroup.style.display = 'block';
+    } else if (!checkbox.disabled) {
+        descGroup.style.display = 'none';
+    }
+}
+
+// Calculate days until expiration
+document.addEventListener('DOMContentLoaded', function() {
+    {% if req.expires_at %}
+    const expirationDate = new Date('{{ req.expires_at.isoformat() }}Z');
+    const now = new Date();
+    const daysUntilExpiration = Math.ceil((expirationDate - now) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiration > 0) {
+        document.getElementById('expiration_days').value = daysUntilExpiration;
+    }
+    {% endif %}
+});
+</script>
+
+<style>
+.request-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-section, .request-info {
+    margin-bottom: 2em;
+    padding: 1.5em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.form-section h3, .request-info h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #007cba;
+    padding-bottom: 0.5em;
+}
+
+.form-group {
+    margin-bottom: 1em;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+.form-group input[type="number"] {
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    width: 200px;
+}
+
+.form-group small {
+    display: block;
+    color: #666;
+    margin-top: 0.25em;
+}
+
+.module-item {
+    margin-bottom: 1.5em;
+    padding: 1em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: white;
+}
+
+.module-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5em;
+}
+
+.module-header input[type="checkbox"] {
+    margin-right: 0.5em;
+    transform: scale(1.2);
+}
+
+.module-label {
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.status-badge {
+    font-size: 0.8em;
+    padding: 0.2em 0.5em;
+    border-radius: 10px;
+    font-weight: normal;
+}
+
+.status-badge.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.new {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.module-description {
+    margin-left: 1.5em;
+    padding-top: 0.5em;
+}
+
+.module-description label {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.module-description input[type="text"] {
+    width: 100%;
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-top: 0.25em;
+}
+
+.module-description input[type="text"]:read-only {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.completed-note {
+    display: block;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 0.25em;
+}
+
+.status-summary {
+    display: flex;
+    gap: 2em;
+    margin-bottom: 1em;
+}
+
+.status-item {
+    padding: 0.5em;
+    background: white;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+}
+
+.client-link {
+    padding: 1em;
+    background: #e7f3ff;
+    border-radius: 3px;
+    border: 1px solid #b8daff;
+}
+
+.client-link a {
+    color: #004085;
+    word-break: break-all;
+}
+
+.form-actions {
+    text-align: center;
+    padding: 1em 0;
+    border-top: 1px solid #ddd;
+    margin-top: 2em;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 0.75em 1.5em;
+    margin: 0 0.5em;
+    border: none;
+    border-radius: 3px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #007cba;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #005a87;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.flash-message {
+    padding: 1em;
+    margin-bottom: 1em;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.flash-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.flash-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+</style>
+{% endblock %}

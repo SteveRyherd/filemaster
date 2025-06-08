@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # SQLAlchemy database instance
@@ -56,5 +56,4 @@ class AccessLog(db.Model):
     module_id = db.Column(db.Integer, db.ForeignKey('module.id'), nullable=True)
     ip_address = db.Column(db.String(64))
     action = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

@@ -1,9 +1,21 @@
-from flask_admin import Admin, BaseView, expose
+from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask import url_for, redirect, request
 from markupsafe import Markup
 from models import db, ClientRequest, Module, AccessLog
 from datetime import datetime
+
+
+class CustomAdminIndexView(AdminIndexView):
+    """Custom admin index that redirects to Client Requests and is hidden from menu."""
+    
+    def is_visible(self):
+        # This view won't appear in the menu structure
+        return False
+    
+    @expose('/')
+    def index(self):
+        return redirect('/admin/clientrequest/')
 
 class ClientRequestView(ModelView):
     """Custom view for ClientRequest with completion status."""
@@ -150,11 +162,12 @@ def setup_admin(app):
         app, 
         name='FileMaster Admin',
         template_mode='bootstrap3',
-        url='/admin'  # This replaces your /admin routes
+        url='/admin',
+        index_view=CustomAdminIndexView(name='Home')  # Custom index that redirects
     )
     
     # Add model views
-    admin.add_view(ClientRequestView(ClientRequest, db.session, name='Client Requests'))
+    admin.add_view(ClientRequestView(ClientRequest, db.session, name='Client Requests', endpoint='clientrequest'))
     admin.add_view(ModuleView(Module, db.session, name='Modules'))
     admin.add_view(AccessLogView(AccessLog, db.session, name='Access Logs'))
     

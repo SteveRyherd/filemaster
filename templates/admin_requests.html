@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="admin-header">
+    <h2>Client Requests</h2>
+    <div class="admin-actions">
+        <a href="{{ url_for('create_request') }}" class="btn-primary">+ Create New Request</a>
+        <a href="{{ url_for('view_logs') }}" class="btn-secondary">View Access Logs</a>
+    </div>
+</div>
+
+{% if requests %}
+<table class="requests-table">
+    <thead>
+        <tr>
+            <th>Token</th>
+            <th>Progress</th>
+            <th>Expiration</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in requests %}
+        <tr class="{% if r.expires_at and r.expires_at < now %}expired{% elif r.completed == r.total %}completed{% endif %}">
+            <td class="token-cell">
+                <a href="{{ url_for('admin_request_detail', token=r.token) }}" class="token-link">
+                    {{ r.token[:8] }}...
+                </a>
+                <div class="token-full">{{ r.token }}</div>
+            </td>
+            <td class="progress-cell">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (r.completed / r.total * 100) if r.total > 0 else 0 }}%"></div>
+                </div>
+                <span class="progress-text">{{ r.completed }}/{{ r.total }}</span>
+                {% if r.completed == r.total %}
+                    <span class="status-badge complete">✓ Complete</span>
+                {% else %}
+                    <span class="status-badge pending">{{ r.total - r.completed }} pending</span>
+                {% endif %}
+            </td>
+            <td class="expiration-cell">
+                {% if r.expires_at %}
+                    {% set days_until = ((r.expires_at - now).total_seconds() / 86400) | round | int %}
+                    {% if days_until < 0 %}
+                        <span class="expired">Expired {{ (-days_until) }} day(s) ago</span>
+                    {% elif days_until == 0 %}
+                        <span class="expires-today">Expires today</span>
+                    {% elif days_until <= 3 %}
+                        <span class="expires-soon">{{ days_until }} day(s) left</span>
+                    {% else %}
+                        <span class="expires-later">{{ days_until }} day(s) left</span>
+                    {% endif %}
+                    <div class="expiration-date">{{ r.expires_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                {% else %}
+                    <span class="no-expiration">No expiration</span>
+                {% endif %}
+            </td>
+            <td class="actions-cell">
+                <div class="action-buttons">
+                    <a href="{{ url_for('admin_request_detail', token=r.token) }}" class="btn-small btn-view">View</a>
+                    <a href="{{ url_for('edit_request', token=r.token) }}" class="btn-small btn-edit">Edit</a>
+                    <a href="{{ url_for('view_request', token=r.token) }}" class="btn-small btn-client" target="_blank">Client View</a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <h3>No requests found</h3>
+    <p>Get started by creating your first client request.</p>
+    <a href="{{ url_for('create_request') }}" class="btn-primary">Create First Request</a>
+</div>
+{% endif %}
+
+<style>
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2em;
+    padding-bottom: 1em;
+    border-bottom: 2px solid #007cba;
+}
+
+.admin-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.5em;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 0.75em 1.5em;
+    border: none;
+    border-radius: 3px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #007cba;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #005a87;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.requests-table thead {
+    background: #f8f9fa;
+}
+
+.requests-table th {
+    padding: 1em;
+    text-align: left;
+    font-weight: bold;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.requests-table td {
+    padding: 1em;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.requests-table tr:hover {
+    background: #f8f9fa;
+}
+
+.requests-table tr.completed {
+    background: #f8fff8;
+}
+
+.requests-table tr.expired {
+    background: #fff5f5;
+}
+
+.token-cell {
+    max-width: 150px;
+}
+
+.token-link {
+    font-family: monospace;
+    font-weight: bold;
+    color: #007cba;
+    text-decoration: none;
+}
+
+.token-link:hover {
+    text-decoration: underline;
+}
+
+.token-full {
+    font-family: monospace;
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: 0.25em;
+}
+
+.progress-cell {
+    min-width: 180px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5em;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-weight: bold;
+    margin-right: 0.5em;
+}
+
+.status-badge {
+    font-size: 0.8em;
+    padding: 0.2em 0.6em;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.status-badge.complete {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.expiration-cell {
+    min-width: 120px;
+}
+
+.expired {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.expires-today {
+    color: #fd7e14;
+    font-weight: bold;
+}
+
+.expires-soon {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.expires-later {
+    color: #28a745;
+}
+
+.no-expiration {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.expiration-date {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: 0.25em;
+}
+
+.actions-cell {
+    min-width: 200px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.25em;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 0.4em 0.8em;
+    font-size: 0.85em;
+    border: none;
+    border-radius: 3px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.btn-view {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #138496;
+}
+
+.btn-edit {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-edit:hover {
+    background: #e0a800;
+}
+
+.btn-client {
+    background: #28a745;
+    color: white;
+}
+
+.btn-client:hover {
+    background: #1e7e34;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4em 2em;
+    color: #6c757d;
+}
+
+.empty-state h3 {
+    margin-bottom: 0.5em;
+    color: #495057;
+}
+
+.empty-state p {
+    margin-bottom: 2em;
+    font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        gap: 1em;
+        align-items: flex-start;
+    }
+    
+    .admin-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .requests-table {
+        font-size: 0.9em;
+    }
+    
+    .requests-table th,
+    .requests-table td {
+        padding: 0.5em;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-small {
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
