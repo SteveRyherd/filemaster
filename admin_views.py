@@ -58,10 +58,6 @@ class ClientRequestView(ModelView):
         'created_modules': _modules_formatter,
     }
     
-    # Virtual columns (computed fields)
-    column_extra_row_actions = [
-        ('view_request', 'eye', 'View Client Request')
-    ]
 
 
 class ModuleView(ModelView):
