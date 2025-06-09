@@ -89,7 +89,7 @@ async def view_request(request: Request, token: str, module: int | None = None, 
         handler = MODULE_HANDLERS.get(selected.kind)
         if not handler:
             raise HTTPException(status_code=400, detail="Unknown module type")
-        module_html = handler.render(selected)
+        module_html = handler.render(selected, request)
 
     db.add(
         AccessLog(

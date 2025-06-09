@@ -2,9 +2,11 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any
 import traceback
 try:
-    from flask import render_template
-except Exception:  # When running under FastAPI
+    from flask import render_template, has_app_context
+except Exception:  # When running under FastAPI or Flask not installed
     render_template = None
+    def has_app_context() -> bool:
+        return False
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -12,7 +14,7 @@ jinja_env = Environment(loader=FileSystemLoader('templates'))
 
 def render_template_compat(name: str, **context):
     """Render Jinja template using Flask or standalone environment."""
-    if render_template:
+    if render_template and has_app_context():
         return render_template(name, **context)
     template = jinja_env.get_template(name)
     return template.render(**context)
@@ -79,9 +81,12 @@ class BaseModuleHandler(ABC):
             print(f"Traceback: {traceback.format_exc()}")
             return False
 
-    def render(self, module):
+    def render(self, module, request=None):
         """Render the module form."""
-        return render_template_compat(f'modules/{self.template_name}', module=module)
+        context = {"module": module}
+        if request and not (render_template and has_app_context()):
+            context["url_for"] = request.url_for
+        return render_template_compat(f'modules/{self.template_name}', **context)
 
     def get_display_data(self, module) -> Dict[str, Any]:
         """Get formatted data for display in admin views."""

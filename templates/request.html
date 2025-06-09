@@ -7,7 +7,7 @@
         {% for m in req.modules %}
             <li>
             {% if m.completed %}&#10003;{% else %}&#9633;{% endif %}
-            <a href="{{ url_for('view_request', token=req.token, module=m.id) }}">{{ m.description }}</a>
+            <a href="{{ url_for('view_request', token=req.token) }}?module={{ m.id }}">{{ m.description }}</a>
             </li>
         {% endfor %}
         </ul>
