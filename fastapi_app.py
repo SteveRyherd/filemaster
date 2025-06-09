@@ -105,9 +105,20 @@ async def view_request(request: Request, token: str, module: int | None = None, 
     )
     db.commit()
 
+    modules_data = [
+        {"id": m.id, "description": m.description, "completed": m.completed}
+        for m in req_db.modules
+    ]
+
     return templates.TemplateResponse(
         "request.html",
-        {"request": request, "req": req_db, "selected": selected, "module_html": module_html},
+        {
+            "request": request,
+            "req": req_db,
+            "selected": selected,
+            "module_html": module_html,
+            "modules_data": modules_data,
+        },
     )
 
 

@@ -1,16 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="layout" x-data="{}">
+{% set modules_json = modules_data | tojson %}
+<div class="layout" x-data="requestPage({{ modules_json|safe }})">
     <div class="queue">
         <h2>Requested Items</h2>
         <ul>
-        {% for m in req.modules %}
-            <li>
-            {% if m.completed %}&#10003;{% else %}&#9633;{% endif %}
-            <a href="{{ url_for('view_request', token=req.token) }}?module={{ m.id }}">{{ m.description }}</a>
-            </li>
-        {% endfor %}
+            <template x-for="m in modules" :key="m.id">
+                <li>
+                    <span x-text="m.completed ? '✓' : '□'"></span>
+                    <a :href="'{{ url_for('view_request', token=req.token) }}?module=' + m.id" x-text="m.description"></a>
+                </li>
+            </template>
         </ul>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" :style="{width: progress + '%'}"></div>
+            </div>
+            <p x-text="progress + '% complete'"></p>
+        </div>
         {% if req.expires_at %}
             <p class="expiration">
                 Expires {{ req.expires_at.strftime('%Y-%m-%d %H:%M UTC') }}
@@ -27,4 +34,16 @@
         {% endif %}
     </div>
 </div>
+<script>
+function requestPage(modules) {
+    return {
+        modules: modules,
+        get progress() {
+            if (this.modules.length === 0) return 100;
+            let done = this.modules.filter(m => m.completed).length;
+            return Math.round((done / this.modules.length) * 100);
+        }
+    }
+}
+</script>
 {% endblock %}

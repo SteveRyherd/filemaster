@@ -102,7 +102,18 @@ def view_request(token):
     )
     db.session.commit()
 
-    return render_template('request.html', req=req, selected=selected, module_html=module_html)
+    modules_data = [
+        {"id": m.id, "description": m.description, "completed": m.completed}
+        for m in req.modules
+    ]
+
+    return render_template(
+        'request.html',
+        req=req,
+        selected=selected,
+        module_html=module_html,
+        modules_data=modules_data,
+    )
 
 @app.route('/module/<int:module_id>', methods=['POST'])
 def handle_module(module_id):
