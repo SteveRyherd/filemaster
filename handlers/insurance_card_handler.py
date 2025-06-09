@@ -1,7 +1,10 @@
 import os
 import uuid
 from typing import Dict, Any
-from flask import current_app
+try:
+    from flask import current_app
+except Exception:
+    current_app = None
 from werkzeug.utils import secure_filename
 from .base import BaseModuleHandler, ModuleResult
 
@@ -67,18 +70,29 @@ class InsuranceCardModuleHandler(BaseModuleHandler):
         })
 
     def _process_file(self, file, prefix: str) -> Dict[str, Any]:
-        if not self._allowed_file(file.filename, file.mimetype):
-            raise ValueError(f"{prefix.title()} file type not allowed. "
-                           f"Filename: {file.filename}, Mimetype: {file.mimetype}. "
-                           f"Allowed extensions: {', '.join(self.ALLOWED_EXTENSIONS)}")
+        mimetype = getattr(file, 'mimetype', getattr(file, 'content_type', ''))
+        if not self._allowed_file(file.filename, mimetype):
+            raise ValueError(
+                f"{prefix.title()} file type not allowed. "
+                f"Filename: {file.filename}, Mimetype: {mimetype}. "
+                f"Allowed extensions: {', '.join(self.ALLOWED_EXTENSIONS)}"
+            )
 
-        upload_folder = current_app.config['UPLOAD_FOLDER']
+        upload_folder = (
+            current_app.config['UPLOAD_FOLDER']
+            if current_app else os.getenv('UPLOAD_FOLDER', 'uploads')
+        )
         os.makedirs(upload_folder, exist_ok=True)
 
         filename = secure_filename(file.filename)
         unique_filename = f"{uuid.uuid4().hex}_{prefix}_{filename}"
         file_path = os.path.join(upload_folder, unique_filename)
-        file.save(file_path)
+        if hasattr(file, 'save'):
+            file.save(file_path)
+        else:
+            file.file.seek(0)
+            with open(file_path, 'wb') as f:
+                f.write(file.file.read())
 
         return {
             'file_path': unique_filename,

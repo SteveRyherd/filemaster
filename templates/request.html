@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="layout">
+<div class="layout" x-data="{}">
     <div class="queue">
         <h2>Requested Items</h2>
         <ul>
         {% for m in req.modules %}
             <li>
             {% if m.completed %}&#10003;{% else %}&#9633;{% endif %}
-            <a href="{{ url_for('view_request', token=req.token, module=m.id) }}">{{ m.description }}</a>
+            <a href="{{ url_for('view_request', token=req.token) }}?module={{ m.id }}">{{ m.description }}</a>
             </li>
         {% endfor %}
         </ul>
