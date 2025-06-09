@@ -45,6 +45,10 @@ def get_db():
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/demo", response_class=HTMLResponse)
+async def demo(request: Request):
+    return templates.TemplateResponse("demo.html", {"request": request})
+
 
 @app.get("/create_dummy", response_class=HTMLResponse)
 async def create_dummy(request: Request, days: int | None = None, db: Session = Depends(get_db)):
