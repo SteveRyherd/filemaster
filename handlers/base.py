@@ -1,7 +1,21 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
-from flask import render_template
 import traceback
+try:
+    from flask import render_template
+except Exception:  # When running under FastAPI
+    render_template = None
+
+from jinja2 import Environment, FileSystemLoader
+
+jinja_env = Environment(loader=FileSystemLoader('templates'))
+
+def render_template_compat(name: str, **context):
+    """Render Jinja template using Flask or standalone environment."""
+    if render_template:
+        return render_template(name, **context)
+    template = jinja_env.get_template(name)
+    return template.render(**context)
 
 
 class ModuleResult:
@@ -67,7 +81,7 @@ class BaseModuleHandler(ABC):
 
     def render(self, module):
         """Render the module form."""
-        return render_template(f'modules/{self.template_name}', module=module)
+        return render_template_compat(f'modules/{self.template_name}', module=module)
 
     def get_display_data(self, module) -> Dict[str, Any]:
         """Get formatted data for display in admin views."""
