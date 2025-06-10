@@ -61,7 +61,11 @@ class Module(Base):
     __tablename__ = "module"
 
     id = Column(Integer, primary_key=True)
-    request_id = Column(Integer, ForeignKey("client_request.id"), nullable=False)
+    request_id = Column(
+        Integer,
+        ForeignKey("client_request.id"),
+        nullable=False,
+    )
     kind = Column(String(50), nullable=False)
     label = Column(String(255))
     description = Column(Text)

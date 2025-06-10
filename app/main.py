@@ -75,7 +75,9 @@ def create_request(data: RequestCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/requests/{request_id}/modules", response_model=ModuleStatus)
-def attach_module(request_id: int, data: ModuleAttach, db: Session = Depends(get_db)):
+def attach_module(
+    request_id: int, data: ModuleAttach, db: Session = Depends(get_db)
+) -> ModuleStatus:
     req = db.get(ClientRequest, request_id)
     if not req:
         raise HTTPException(status_code=404, detail="Request not found")
@@ -90,7 +92,10 @@ def attach_module(request_id: int, data: ModuleAttach, db: Session = Depends(get
     db.commit()
     db.refresh(module)
     return ModuleStatus(
-        id=module.id, kind=module.kind, label=module.label, completed=module.completed
+        id=module.id,
+        kind=module.kind,
+        label=module.label,
+        completed=module.completed,
     )
 
 
