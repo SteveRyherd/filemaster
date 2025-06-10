@@ -1,10 +1,13 @@
 """Main FastAPI application."""
 
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from secrets import token_hex
-from datetime import datetime
+from datetime import datetime, timedelta
+from pathlib import Path
 
 from .modules import discover_modules
 from .models import ClientRequest, Module
@@ -13,6 +16,7 @@ from .utils.file_orchestrator import FileOrchestrator
 from .settings import Settings
 
 app = FastAPI(title="FileMaster")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def get_db() -> Session:
@@ -25,6 +29,7 @@ def get_db() -> Session:
 
 class RequestCreate(BaseModel):
     nickname: str | None = None
+    expires_days: int | None = None
 
 
 class ModuleAttach(BaseModel):
@@ -74,6 +79,12 @@ async def root() -> dict[str, str]:
     return {"message": "Welcome to FileMaster"}
 
 
+@app.get("/admin/new_request", response_class=HTMLResponse)
+async def new_request_page() -> HTMLResponse:
+    """Serve the new request creation page."""
+    return HTMLResponse(Path("static/new_request.html").read_text())
+
+
 @app.get("/modules")
 async def list_modules() -> list[str]:
     """List registered module keys."""
@@ -84,7 +95,10 @@ async def list_modules() -> list[str]:
 
 @app.post("/requests", response_model=RequestStatus)
 def create_request(data: RequestCreate, db: Session = Depends(get_db)):
-    req = ClientRequest(token=token_hex(16), nickname=data.nickname)
+    expires_at = None
+    if data.expires_days:
+        expires_at = datetime.utcnow() + timedelta(days=data.expires_days)
+    req = ClientRequest(token=token_hex(16), nickname=data.nickname, expires_at=expires_at)
     db.add(req)
     db.commit()
     db.refresh(req)
