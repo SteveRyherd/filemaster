@@ -11,6 +11,7 @@ uvicorn = "*"
 SQLAlchemy = "*"
 cryptography = "*"
 pydantic = "*"
+pydantic-settings = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

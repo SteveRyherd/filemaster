@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Set
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     MAX_MODULES_PER_REQUEST: int = 20
     DEFAULT_REQUEST_EXPIRY_DAYS: int = 7
 
-    model_config = BaseSettings.ConfigDict(
+    model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
     )
