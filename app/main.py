@@ -48,14 +48,19 @@ class RequestStatus(BaseModel):
 settings: Settings
 
 
+async def load_modules() -> None:
+    """Discover modules and initialize the database."""
+    discover_modules()
+    init_db()
+
+
 @app.on_event("startup")
 async def startup_event() -> None:
-    """Load configuration and initialize modules and database."""
+    """Load configuration and then initialize modules."""
     global settings
     settings = Settings()
     app.state.settings = settings
-    discover_modules()
-    init_db()
+    await load_modules()
 
 
 @app.get("/")
