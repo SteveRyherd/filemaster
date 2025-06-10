@@ -121,7 +121,7 @@ class ClientRequest(Base):
     last_accessed = Column(DateTime)
     
     # Business context
-    metadata = Column(JSON)  # Vehicle info, deal number, etc.
+    meta = Column(JSON)  # Vehicle info, deal number, etc.
     
     modules = relationship('Module', back_populates='request', cascade='all, delete-orphan')
 
