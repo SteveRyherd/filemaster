@@ -10,6 +10,7 @@ fastapi = "*"
 uvicorn = "*"
 SQLAlchemy = "*"
 cryptography = "*"
+pydantic = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
