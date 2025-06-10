@@ -2,8 +2,8 @@
 
 from pydantic import BaseModel, Field
 
-from ..models import ClientRequest
-from ..modules import ModuleHandler
+from ...models import ClientRequest
+from .. import ModuleHandler
 
 
 class SampleModel(BaseModel):
