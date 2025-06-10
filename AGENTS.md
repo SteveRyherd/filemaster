@@ -76,6 +76,33 @@ filemaster/
         └── progress.js        # Progress tracking
 ```
 
+### Plugin-Based Module System
+
+Modules behave like drop-in plugins. Each module package ships with a handler
+class that implements a small, shared interface so the core application can
+load modules without knowing their internals.
+
+```python
+class ModuleHandler(Protocol):
+    """Common contract for module handlers"""
+
+    key: str  # unique identifier
+    name: str  # human readable label
+
+    def get_fields(self) -> list[Field]:
+        """Return dynamic form fields"""
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Clean and validate submitted data"""
+
+    def save(self, request: ClientRequest, data: dict[str, Any]) -> None:
+        """Persist the module's data"""
+```
+
+The `modules/__init__.py` file discovers available packages, loads their
+handlers, and registers them with the application. All interaction with modules
+goes through this interface, which keeps modules self-contained and portable.
+
 ## Database Models
 
 ### Core Models
