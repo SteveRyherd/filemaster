@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from ..models import ClientRequest
 from ..modules import ModuleHandler
+from ..utils.file_orchestrator import FileOrchestrator
 
 
 class SampleModel(BaseModel):
@@ -22,7 +23,9 @@ class SampleModuleHandler(ModuleHandler):
     def validate(self, data: dict) -> dict:
         return SampleModel(**data).dict()
 
-    def save(self, request: ClientRequest, data: dict) -> None:
+    def save(
+        self, request: ClientRequest, data: dict, orchestrator: FileOrchestrator
+    ) -> None:
         # Placeholder: In a real module, persist data to DB or filesystem
         print(f"Saving data for request {request.id}: {data}")
 
