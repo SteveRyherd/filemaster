@@ -12,6 +12,8 @@ FileMaster v2.0 is a modular customer document collection platform designed for 
 - **Framework**: FastAPI (Python)
 - **Database**: SQLAlchemy with PostgreSQL (production) / SQLite (development)
 - **File Storage**: Local filesystem with organized directory structure
+- **File Operations**: Central orchestrator handles uploads, downloads and deletions;
+  modules never access the filesystem directly
 - **Background Tasks**: APScheduler for cleanup and maintenance
 - **Migrations**: Alembic for database schema management
 
@@ -165,6 +167,9 @@ class AccessLog(Base):
     action = Column(String(50))  # 'view', 'submit', 'download', 'edit'
     timestamp = Column(DateTime, default=datetime.utcnow)
 ```
+
+Modules do not create their own tables; this generic model combined with JSON
+fields supports all module data and configuration.
 
 ## Module System Specifications
 
@@ -420,6 +425,8 @@ uploads/
 - Orphaned file cleanup
 - Storage usage monitoring
 - Backup before deletion (optional)
+- Modules perform all file operations through the orchestrator rather than
+  direct filesystem access
 
 ## Data Security & Privacy
 
