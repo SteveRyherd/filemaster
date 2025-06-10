@@ -20,3 +20,16 @@ The configuration system relies on the `pydantic-settings` package (along with `
 | `DEFAULT_REQUEST_EXPIRY_DAYS` | Default request expiry in days | `7` |
 
 These settings are loaded via the `Settings` class in `app/settings.py` on application startup.
+
+## Data Viewer
+
+For troubleshooting, you can inspect stored module data directly using the
+`data_viewer` utilities:
+
+```python
+from app.utils import get_module_data, get_request_data
+```
+
+Both functions require a SQLAlchemy `Session` instance. Pass a request ID to
+`get_request_data` to retrieve all module results for that request, or a module
+ID to `get_module_data` for a specific module's data.
