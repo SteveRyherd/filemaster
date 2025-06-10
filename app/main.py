@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from secrets import token_hex
+from datetime import datetime
 
 from .modules import discover_modules
 from .models import ClientRequest, Module
@@ -36,12 +37,14 @@ class ModuleStatus(BaseModel):
     kind: str
     label: str | None
     completed: bool
+    completed_at: datetime | None = None
 
 
 class RequestStatus(BaseModel):
     id: int
     token: str
     modules: list[ModuleStatus]
+    completed_at: datetime | None = None
 
 
 @app.on_event("startup")
@@ -71,7 +74,9 @@ def create_request(data: RequestCreate, db: Session = Depends(get_db)):
     db.add(req)
     db.commit()
     db.refresh(req)
-    return RequestStatus(id=req.id, token=req.token, modules=[])
+    return RequestStatus(
+        id=req.id, token=req.token, modules=[], completed_at=req.completed_at
+    )
 
 
 @app.post("/requests/{request_id}/modules", response_model=ModuleStatus)
@@ -96,6 +101,7 @@ def attach_module(
         kind=module.kind,
         label=module.label,
         completed=module.completed,
+        completed_at=module.completed_at,
     )
 
 
@@ -110,7 +116,45 @@ def get_request(request_id: int, db: Session = Depends(get_db)):
             kind=m.kind,
             label=m.label,
             completed=m.completed,
+            completed_at=m.completed_at,
         )
         for m in req.modules
     ]
-    return RequestStatus(id=req.id, token=req.token, modules=modules)
+    return RequestStatus(
+        id=req.id, token=req.token, modules=modules, completed_at=req.completed_at
+    )
+
+
+@app.post("/modules/{module_id}/submit", response_model=ModuleStatus)
+def submit_module(module_id: int, data: dict, db: Session = Depends(get_db)):
+    module = db.get(Module, module_id)
+    if not module:
+        raise HTTPException(status_code=404, detail="Module not found")
+    from .modules import registry
+
+    handler = registry.get(module.kind)
+    if not handler:
+        raise HTTPException(status_code=404, detail="Handler not found")
+
+    validated = handler.validate(data)
+    handler.save(module.request, validated)
+
+    module.result_data = validated
+    module.completed = True
+    module.completed_at = datetime.utcnow()
+
+    if module.request and all(m.completed for m in module.request.modules):
+        module.request.completed_at = datetime.utcnow()
+        db.add(module.request)
+
+    db.add(module)
+    db.commit()
+    db.refresh(module)
+
+    return ModuleStatus(
+        id=module.id,
+        kind=module.kind,
+        label=module.label,
+        completed=module.completed,
+        completed_at=module.completed_at,
+    )
