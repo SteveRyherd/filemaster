@@ -5,8 +5,8 @@ The configuration system relies on the `pydantic-settings` package (along with `
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SECRET_KEY` | Secret key used for cryptographic operations | - |
-| `ENCRYPTION_KEY` | Key used by the encryption utilities | - |
+| `SECRET_KEY` | Secret key used for cryptographic operations | `insecure-development-key` |
+| `ENCRYPTION_KEY` | Key used by the encryption utilities | `insecure-development-encryption-key` |
 | `DATABASE_URL` | Database connection string | `sqlite:///./filemaster.db` |
 | `UPLOAD_FOLDER` | Directory for uploaded files | `uploads` |
 | `MAX_FILE_SIZE` | Maximum allowed upload size in bytes | `10485760` |

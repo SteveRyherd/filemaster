@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     """Application configuration loaded from environment variables."""
 
     # Core settings
-    SECRET_KEY: str
-    ENCRYPTION_KEY: str
+    SECRET_KEY: str = "insecure-development-key"
+    ENCRYPTION_KEY: str = "insecure-development-encryption-key"
     DATABASE_URL: str = "sqlite:///./filemaster.db"
 
     # File handling
