@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
-from typing import Dict, Type
+from typing import Dict, TYPE_CHECKING
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:  # pragma: no cover - import for type checking only
+    from ..models import ClientRequest
 
 
 class ModuleHandler:
@@ -30,7 +33,6 @@ registry: Dict[str, ModuleHandler] = {}
 
 def discover_modules() -> None:
     """Discover and register modules available in the modules package."""
-    global registry
     registry.clear()
     package = __name__
     for finder, name, ispkg in pkgutil.iter_modules(__path__):
