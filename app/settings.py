@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./filemaster.db"
 
     # File handling
-    UPLOAD_FOLDER: str = "uploads"
+    UPLOAD_FOLDER: str = "uploads"  # base directory for FileOrchestrator
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     ALLOWED_EXTENSIONS: Set[str] = {"pdf", "png", "jpg", "jpeg", "gif", "heic"}
 
@@ -34,4 +34,3 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
-

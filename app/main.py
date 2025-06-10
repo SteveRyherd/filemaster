@@ -9,6 +9,7 @@ from datetime import datetime
 from .modules import discover_modules
 from .models import ClientRequest, Module
 from .utils.database import SessionLocal, init_db
+from .utils.file_orchestrator import FileOrchestrator
 from .settings import Settings
 
 app = FastAPI(title="FileMaster")
@@ -63,6 +64,7 @@ async def startup_event() -> None:
     global settings
     settings = Settings()
     app.state.settings = settings
+    app.state.orchestrator = FileOrchestrator(settings.UPLOAD_FOLDER)
     load_modules()
 
 
@@ -149,7 +151,8 @@ def submit_module(module_id: int, data: dict, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Handler not found")
 
     validated = handler.validate(data)
-    handler.save(module.request, validated)
+    orchestrator: FileOrchestrator = app.state.orchestrator
+    handler.save(module.request, validated, orchestrator)
 
     module.result_data = validated
     module.completed = True

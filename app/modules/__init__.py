@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
     from ..models import ClientRequest
+    from ..utils.file_orchestrator import FileOrchestrator
 
 
 class ModuleHandler:
@@ -24,7 +25,12 @@ class ModuleHandler:
     def validate(self, data: dict) -> dict:
         raise NotImplementedError
 
-    def save(self, request: "ClientRequest", data: dict) -> None:
+    def save(
+        self,
+        request: "ClientRequest",
+        data: dict,
+        orchestrator: "FileOrchestrator",
+    ) -> None:
         raise NotImplementedError
 
 
