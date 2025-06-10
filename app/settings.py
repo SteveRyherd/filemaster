@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Set
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

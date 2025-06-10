@@ -1,7 +1,7 @@
 # Environment Setup
 
 The application uses environment variables for configuration. Create a `.env` file or set the variables in your environment before starting the server.
-The configuration system relies on the `pydantic` package, which is installed automatically when running `poetry install`.
+The configuration system relies on the `pydantic-settings` package (along with `pydantic`), which is installed automatically when running `poetry install`.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
