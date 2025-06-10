@@ -1,5 +1,6 @@
 from app.modules import discover_modules, registry
 from app.utils import encryption
+from app.utils.file_orchestrator import FileOrchestrator
 
 
 def test_ssn_module_registered():
@@ -15,7 +16,8 @@ def test_ssn_save_encrypted(monkeypatch):
 
     data = {"ssn": "123-45-6789"}
     validated = handler.validate(data)
-    handler.save(None, validated)
+    dummy_orchestrator = FileOrchestrator("/tmp")
+    handler.save(None, validated, dummy_orchestrator)
 
     assert validated["ssn"] != data["ssn"]
     decrypted = encryption.decrypt(validated["ssn"].encode(), key)
