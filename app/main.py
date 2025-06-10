@@ -8,6 +8,7 @@ from secrets import token_hex
 from .modules import discover_modules
 from .models import ClientRequest, Module
 from .utils.database import SessionLocal, init_db
+from .settings import Settings
 
 app = FastAPI(title="FileMaster")
 
@@ -44,11 +45,22 @@ class RequestStatus(BaseModel):
     modules: list[ModuleStatus]
 
 
-@app.on_event("startup")
-async def load_modules() -> None:
-    """Discover and initialize modules on startup."""
+settings: Settings
+
+
+def load_modules() -> None:
+    """Discover modules and initialize the database."""
     discover_modules()
     init_db()
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    """Load configuration and then initialize modules."""
+    global settings
+    settings = Settings()
+    app.state.settings = settings
+    load_modules()
 
 
 @app.get("/")
