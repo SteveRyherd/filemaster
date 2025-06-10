@@ -6,6 +6,7 @@ from ...models import ClientRequest
 from .. import ModuleHandler
 from ...settings import Settings
 from ...utils import encryption
+from ...utils.file_orchestrator import FileOrchestrator
 
 
 class SSNModel(BaseModel):
@@ -26,7 +27,12 @@ class SSNModuleHandler(ModuleHandler):
     def validate(self, data: dict) -> dict:
         return SSNModel(**data).dict()
 
-    def save(self, request: ClientRequest, data: dict) -> None:
+    def save(
+        self,
+        request: ClientRequest,
+        data: dict,
+        orchestrator: FileOrchestrator,
+    ) -> None:
         key = Settings().ENCRYPTION_KEY.encode()
         encrypted = encryption.encrypt(data["ssn"], key)
         data["ssn"] = encrypted.decode()
