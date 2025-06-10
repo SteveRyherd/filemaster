@@ -44,7 +44,7 @@ class ClientRequest(Base):
     expires_at = Column(DateTime)
     completed_at = Column(DateTime)
     last_accessed = Column(DateTime)
-    metadata = Column(JSON, default=dict)
+    meta = Column(JSON, default=dict)
 
     creator = relationship("User", back_populates="requests")
     modules = relationship(
