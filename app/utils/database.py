@@ -4,10 +4,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from ..models import Base
+from ..settings import Settings
 
-DATABASE_URL = "sqlite:///./filemaster.db"
+settings = Settings()
 
-engine = create_engine(DATABASE_URL, future=True)
+engine = create_engine(settings.DATABASE_URL, future=True)
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,

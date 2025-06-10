@@ -25,3 +25,5 @@ poetry run uvicorn app.main:app --reload
 
 This will start the API on `http://localhost:8000`.
 
+See [docs/setup.md](docs/setup.md) for configuration via environment variables.
+
