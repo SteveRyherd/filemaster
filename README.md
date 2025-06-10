@@ -28,3 +28,16 @@ This will start the API on `http://localhost:8000`.
 See [docs/setup.md](docs/setup.md) for configuration via environment variables.
 Default values are provided for development, so a `.env` file is optional.
 
+
+## Data Viewer
+
+The utility `app/utils/data_viewer.py` helps inspect stored module data.
+Use it from an interactive Python session:
+
+```python
+from app.utils import get_request_data, get_module_data
+# View all module results for a request
+print(get_request_data(db, request_id))
+# View a single module's stored result
+print(get_module_data(db, module_id))
+```
